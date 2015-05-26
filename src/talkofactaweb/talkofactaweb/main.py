@@ -8,11 +8,11 @@ License: MIT
 
 from flask import Flask
 import logging, os
-log = logging.getLogger('talkofeuropeweb')
+log = logging.getLogger('talkofactaweb')
 
 # ------------ Configuration ------------- #
 app = Flask(__name__)
-app.config.from_object('talkofeuropeweb.config.Config')
+app.config.from_object('talkofactaweb.config.Config')
 # Load optional config from $CONFIG
 if os.getenv('CONFIG', None) is not None:
     variables = {}

@@ -8,8 +8,8 @@ License: MIT
 from setuptools import setup, find_packages
 
 setup(
-    name='talkofeuropedb',
-    description='Talk of Europe Creative Camp #2 - Wordcloud project - Scripts for downloading TalkOfEurope data and converting them into relational form',
+    name='talkofactadb',
+    description='Talk of ACTA - Fork of https://github.com/konstantint/talkofeurope-wordclouds adapted to an ACTA dataset',
     version='0.1',
     author='Konstantin Tretyakov, Ilya Kuzovkin, Aleksandr Tkachenko',
     license='MIT',
@@ -18,10 +18,10 @@ setup(
     install_requires=['docopt', 'SQLAlchemy', 'rdflib', 'requests', 'clint'],
     entry_points={
         'console_scripts': [
-          'test_config = talkofeuropedb.config:test_config',
-          'get_ttl = talkofeuropedb.scripts.get_ttl:main',
-          'ttl2csv = talkofeuropedb.scripts.ttl2csv:main',
-          'csv2db = talkofeuropedb.scripts.csv2db:main',
+          'test_config = talkofactadb.config:test_config',
+          'get_ttl = talkofactadb.scripts.get_ttl:main',
+          'ttl2csv = talkofactadb.scripts.ttl2csv:main',
+          'csv2db = talkofactadb.scripts.csv2db:main',
          ]
     }
 )

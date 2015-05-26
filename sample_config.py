@@ -1,5 +1,5 @@
 # Sample configuration file
-# Specifies parameters used by scripts in talkofeuropedb & talkofeuropewords packages.
+# Specifies parameters used by scripts in talkofeuropedb & talkofactawords packages.
 import os
 
 root_dir = os.path.abspath(os.path.dirname(os.getenv('CONFIG')))
@@ -24,6 +24,6 @@ num_cores = 130
 
 
 # Config parameters used in Flask config
-SQLALCHEMY_DATABASE_URI = 'sqlite:///%s' % os.path.join(root_dir, 'src/talkofeuropeweb/data/resultsdb.sqlite')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///%s' % os.path.join(root_dir, 'src/talkofactaweb/data/resultsdb.sqlite')
 DEBUG = True
 SQLALCHEMY_ECHO = True

@@ -14,8 +14,8 @@ License: MIT
 import csv, gzip, os
 from docopt import docopt
 from clint.textui import progress
-from talkofeuropedb.model import *
-from talkofeuropedb.config import get_config
+from talkofactadb.model import *
+from talkofactadb.config import get_config
 
 
 def main():

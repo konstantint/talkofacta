@@ -12,7 +12,7 @@ License: MIT
 """
 
 from docopt import docopt
-from talkofeuropedb.config import get_config
+from talkofactadb.config import get_config
 import os
 import gzip
 import urllib

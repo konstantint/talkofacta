@@ -12,7 +12,7 @@ License: MIT
 """
 
 import rdflib, csv, os, gzip, sys
-from talkofeuropedb.config import get_config
+from talkofactadb.config import get_config
 from docopt import docopt
 from clint.textui import progress
 
