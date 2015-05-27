@@ -59,7 +59,7 @@
             var self = this;
             self.dates = [];
             dates_years = [];
-            for (var y = 1999; y < 2015; y++) {
+            for (var y = {{min_year}}; y < {{max_year}}; y++) {
                 for (var m = 1; m <= 12; m++) {
                     var sm = (m < 10) ? "0" + m : "" + m;
                     self.dates[self.dates.length] = "" + y + "-" + sm;
@@ -112,7 +112,7 @@
                                 type : 'category',
                                 categories: cats,
                                 tick: {
-                                    count: 2014-1999+1
+                                    count: {{max_year - min_year + 1}}
                                 }
                             }
                         },

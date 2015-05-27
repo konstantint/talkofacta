@@ -6,29 +6,31 @@
     $(document).ready(function() {
          window.page = new WordcloudPage();
          window.page.init();
+         window.page.showCloud();
     });
 </script>
 {% endblock %}
 
 {% block content %}
-<div id="by_country">
+<div id="by_hansard">
     <div class="container">
-        <div class="row"><div class="col-xs-12"><h2>Word usage by country<span id='lblCountryName' style="font-weight: bold"></span></h2></div></div>
+        <div class="row"><div class="col-xs-12"><h2>Word usage by hansard<span id='lblHansardName' style="font-weight: bold"></span></h2></div></div>
         <div class="row">
             <div class="col-xs-12">
-                <div class="btn-group-sm" role="group">
-                    {% for c in countries %}
-                        <button type="button" class="btn btn-default button-country" data-country-code="{{c}}">
-                            <span class="flag-icon flag-icon-{{c|lower}}"></span>&nbsp;{{c}}
-                        </button>
+                <div class="form-group">
+                  <label for="slHansard">Choose a hansard:</label>
+                  <select class="form-control" id="slHansard">
+                    {% for c in hansards %}
+                        <option>{{c}}</option>
                     {% endfor %}
-                    <label title="Leave only those words that no other country used significantly often"><input type="checkbox" id="chkUnique"/>&nbsp;Unique</label>
+                  </select>
+                  <label title="Leave only those words that no other hansard has significantly often"><input type="checkbox" id="chkUnique"/>&nbsp;Unique</label>
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col-xs-12 visualization-container" id="visualizationContainer">
-                <p id="hideOnClick">Choose a country...</p>
+                <p id="hideOnClick">Choose a hansard...</p>
             </div>
         </div>
     </div>
@@ -36,26 +38,26 @@
     <script type="text/javascript">
         function WordcloudPage() {
             this.unique = false;
-            this.country = 'GB';
+            this.hansard = 'ACTA';
         }
 
         WordcloudPage.prototype.init = function() {
             var self = this;
             self.tagCloud = new D3TagCloud("#visualizationContainer");
 
-            $('.button-country').click(function(e) {
-                self.country = this.getAttribute('data-country-code');
+            $('#slHansard').change(function(e) {
+                self.hansard = this.value;
                 self.showCloud();
             });
 
             $('#chkUnique').click(function(e) {
                 self.unique = document.getElementById("chkUnique").checked;
-                if (self.country != '') self.showCloud();
+                if (self.hansard != '') self.showCloud();
             });
         }
 
         WordcloudPage.prototype.showWordUsageDialog = function(word) {
-            var url =  "/wordstats/by_country/" + word;
+            var url =  "/wordstats/by_hansard/" + word;
             $.ajax({url: url})
                 .error(function(error) { alert("A terrible error occurred!"); })
                 .done(function(data) {
@@ -63,7 +65,7 @@
                     var cats = [];
                     for (var i = 0; i < data.data.length; i++) {
                         vals[vals.length] = data.data[i].value;
-                        cats[cats.length] = data.data[i].country;
+                        cats[cats.length] = data.data[i].hansard;
                     }
                     var chart = c3.generate({
                         bindto: '#pnlWordUsage',
@@ -83,15 +85,15 @@
                         },
                         legend: { hide: true }
                     });
-                    $("#lblWordUsageTitle").html("<b>" + word + "</b>: usage by country (log-odds)");
+                    $("#lblWordUsageTitle").html("<b>" + word + "</b>: usage by hansard (log-odds)");
                     $("#dlgWordUsage").modal('show');
               });
         }
 
         WordcloudPage.prototype.showCloud = function() {
             var self = this;
-            var url = "/words/by_country/" + self.country + (self.unique ? "?unique=1" : "");
-            document.getElementById('lblCountryName').innerHTML = ": " + self.country + (self.unique ? " (unique)" : "");
+            var url = "/words/by_hansard/" + self.hansard + (self.unique ? "?unique=1" : "");
+            document.getElementById('lblHansardName').innerHTML = ": " + self.hansard + (self.unique ? " (unique)" : "");
             d3.select("#hideOnClick").remove();
             $.ajax({url: url})
                 .error(function(error) { alert("A terrible error occurred!"); })

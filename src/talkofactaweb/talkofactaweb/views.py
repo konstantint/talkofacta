@@ -8,7 +8,7 @@ License: MIT
 """
 from flask import render_template, request, jsonify
 from .main import app
-from .model import db, ByCountry, ByMonth, ByYear
+from .model import db, ByHansard, ByMonth, BySpeaker
 from sqlalchemy import *
 from math import log
 
@@ -45,36 +45,35 @@ wsizer = WordSizer()
 def index():
     return render_template('index.html')
 
-# ------------------------------ By Country ------------------------------ #
+# ------------------------------ By Hansard ------------------------------ #
+@app.route('/by_hansard')
+def by_hansard():
+    hansards = [c for (c,) in db.session.query(distinct(ByHansard.foreground_group_name)).order_by(ByHansard.foreground_group_name)]
+    return render_template('by_hansard.html', hansards=hansards)
 
-@app.route('/by_country')
-def by_country():
-    countries = [c for (c,) in db.session.query(distinct(ByCountry.foreground_group_name)).order_by(ByCountry.foreground_group_name)]
-    return render_template('by_country.html', countries=countries)
-
-@app.route('/words/by_country/<code>')
-def words_by_country(code):
-    assert len(code) == 2
+@app.route('/words/by_hansard/<code>')
+def words_by_hansard(code):
+    assert len(code) <= 8 and code.startswith('ACTA')
     unique = int(request.args.get('unique', 0))
     if int(unique) != 0:
-        results = db.session.query(ByCountry).filter(ByCountry.foreground_group_name == code).\
-            filter(text("word not in (select word from words_bycountry where foreground_group_name != '%s')" % code)).order_by(ByCountry.pval, desc(ByCountry.odds)).limit(MAX_WORDS)
+        results = db.session.query(ByHansard).filter(ByHansard.foreground_group_name == code).\
+            filter(text("word not in (select word from words_byhansard where foreground_group_name != '%s')" % code)).order_by(ByHansard.pval, desc(ByHansard.odds)).limit(MAX_WORDS)
     else:
-        results = db.session.query(ByCountry).filter(ByCountry.foreground_group_name == code).order_by(ByCountry.pval, desc(ByCountry.odds)).limit(MAX_WORDS)
+        results = db.session.query(ByHansard).filter(ByHansard.foreground_group_name == code).order_by(ByHansard.pval, desc(ByHansard.odds)).limit(MAX_WORDS)
     words = [{'text': o.word, 'odds': min(float(o.odds), 100), 'pval': float(o.pval)} for o in results]
     return jsonify(words = wsizer(words))
 
-@app.route('/wordstats/by_country/<word>')
-def wordstats_by_country(word):
-    countries = [c[0] for c in db.session.query(distinct(ByCountry.foreground_group_name)).order_by(ByCountry.foreground_group_name)]
-    val = {c.foreground_group_name: min(float(c.odds), 100) for c in db.session.query(ByCountry).filter(ByCountry.word == word)}
-    data = [{"country": cn, "value": val.get(cn, None)} for cn in countries]
+@app.route('/wordstats/by_hansard/<word>')
+def wordstats_by_hansard(word):
+    hansards = [c[0] for c in db.session.query(distinct(ByHansard.foreground_group_name)).order_by(ByHansard.foreground_group_name)]
+    val = {c.foreground_group_name: min(float(c.odds), 100) for c in db.session.query(ByHansard).filter(ByHansard.word == word)}
+    data = [{"hansard": cn, "value": val.get(cn, None)} for cn in hansards]
     return jsonify(data=data)
 
 # ------------------------------ By Month ------------------------------ #
 @app.route('/by_month')
 def by_month():
-    return render_template('by_month.html', min_year=1999, max_year=2014)
+    return render_template('by_month.html', min_year=2013, max_year=2015)
 
 @app.route('/words/by_month/<code>')
 def words_by_month(code):
@@ -89,23 +88,6 @@ def wordstats_by_month(word):
     data = [{"month": m, "value": val.get(m, None)} for m in months]
     return jsonify(data=data)
 
-# ------------------------------ By Year ------------------------------ #
-@app.route('/by_year')
-def by_year():
-    return render_template('by_year.html', min_year=1999, max_year=2014)
-
-@app.route('/words/by_year/<code>')
-def words_by_year(code):
-    results = db.session.query(ByYear).filter(ByYear.foreground_group_name == code).order_by(ByYear.pval, desc(ByYear.odds)).limit(MAX_WORDS)
-    words = [{'text': o.word, 'odds': min(float(o.odds), 100), 'pval': float(o.pval)} for o in results]
-    return jsonify(words = wsizer(words))
-
-@app.route('/wordstats/by_year/<word>')
-def wordstats_by_year(word):
-    years = [c for (c,) in db.session.query(distinct(ByYear.foreground_group_name)).order_by(ByYear.foreground_group_name)]
-    val = {c.foreground_group_name: min(float(c.odds), 100) for c in db.session.query(ByYear).filter(ByYear.word == word)}
-    data = [{"year": y, "value": val.get(y, None)} for y in years]
-    return jsonify(data=data)
 
 
 

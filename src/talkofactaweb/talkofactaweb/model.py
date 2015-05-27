@@ -20,11 +20,11 @@ class SignificantWordTableMixin(object):
     pval = Column(Numeric, nullable=False)
     odds = Column(Numeric, nullable=False)
 
-class ByCountry(Base, SignificantWordTableMixin):
-    __tablename__ = 'words_bycountry'
+class ByHansard(Base, SignificantWordTableMixin):
+    __tablename__ = 'words_byhansard'
 
 class ByMonth(Base, SignificantWordTableMixin):
     __tablename__ = 'words_bymonth'
 
-class ByYear(Base, SignificantWordTableMixin):
-    __tablename__ = 'words_byyear'
+class BySpeaker(Base, SignificantWordTableMixin):
+    __tablename__ = 'words_byspeaker'
