@@ -18,10 +18,10 @@ import sys, signal
 from multiprocessing import Pool
 import transaction
 import BTrees
-from talkofeuropedb.model import Speech, open_db
-import talkofeuropewords.extract
-from talkofeuropedb.config import get_config
-from talkofeuropewords.zodb import open_zodb
+from talkofactadb.model import Speech, open_db
+import talkofactawords.extract
+from talkofactadb.config import get_config
+from talkofactawords.zodb import open_zodb
 from docopt import docopt
 from clint.textui import progress
 
@@ -42,7 +42,7 @@ class TaskRunner(object):
 def main():
     args = docopt(__doc__)
     extractor_name = args['<feature_name>']
-    extractor = getattr(talkofeuropewords.extract, extractor_name, None)
+    extractor = getattr(talkofactawords.extract, extractor_name, None)
     if extractor is None:
         print "Unknown extractor name"
         sys.exit(1)
@@ -61,13 +61,13 @@ def main():
     runner = TaskRunner(extractor)
 
     print "Querying database..."
-    speeches = s.query(Speech).filter(Speech.lang == 'en').all()
+    speeches = s.query(Speech).all()
     total_speeches = len(speeches)
 
     print "Computing using %d cores..." % c.num_cores
     pool = Pool(c.num_cores, init_worker)
     try:
-        for i, (id, result) in enumerate(progress.bar(pool.imap_unordered(runner, speeches), label='Progress ', expected_size=total_speeches, every=1000), 1):
+        for i, (id, result) in enumerate(progress.bar(pool.imap_unordered(runner, speeches), label='Progress ', expected_size=total_speeches, every=100), 1):
             zodb_root.features[extractor_name][id] = result
             if i % 1000 == 0:
                 transaction.commit()

@@ -19,7 +19,6 @@ setup(
     packages = find_packages(),
     entry_points = {
         'console_scripts': [
-          'autodetect_language = talkofactawords.scripts.autodetect_language:main',
           'compute_features = talkofactawords.scripts.compute_features:main',
           'collect_words = talkofactawords.scripts.collect_words:main',
           'extract_significant_features = talkofactawords.scripts.extract_significant_features:main',

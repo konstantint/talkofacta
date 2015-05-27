@@ -13,66 +13,38 @@ Writes output into ZODB variable root.all_words as a python set object.
 Copyright 2015, Konstantin Tretyakov, Ilya Kuzovkin, Alexander Tkachenko.
 License: MIT
 """
-from multiprocessing import Pool
-import signal
 from sqlalchemy import func, desc
 from docopt import docopt
 from unidecode import unidecode
 import transaction
 import nltk
-from talkofeuropedb.model import Speech, open_db
-from talkofeuropedb.config import get_config
-from talkofeuropewords.zodb import open_zodb
-
-
-def init_worker():   # Ignore keyboard interrupts (will catch those in parent)
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-def country_words(country_code):
-    session = open_db()
-    zodb_root = open_zodb(read_only=True)
-    ids = session.query(Speech.id).filter(Speech.lang == 'en').filter(Speech.country == country_code).all()
-    all_words = set()
-    for (id,) in ids:
-        all_words = all_words.union(zodb_root.features['words'][id].keys())
-    return all_words
-
+from talkofactadb.model import Speech, open_db
+from talkofactadb.config import get_config
+from talkofactawords.zodb import open_zodb
+from clint.textui import progress
 
 def main():
     args = docopt(__doc__)
     c = get_config()
     session = open_db()
+    zodb_root = open_zodb(read_only=True)
+    ids = session.query(Speech.id).all()
+    all_words = set()
+    for (id,) in progress.bar(ids, label="Progress: ", every=100):
+        all_words = all_words.union(zodb_root.features['words'][id].keys())
 
-    print "Finding 5 most active countries"
-    countries = session.query(Speech.country, func.count(Speech.id)).filter(Speech.lang == 'en').group_by(Speech.country).order_by(desc(func.count(Speech.id))).limit(5).all()
-    print countries
-    country_codes = [c[0] for c in countries]
+    print "Word set size: ", len(all_words)
 
-    print "Collecting words used by each country using 5 cores"
-    pool = Pool(5, init_worker)
-    try:
-        word_sets = pool.map(country_words, country_codes)
-    except KeyboardInterrupt:
-        print "Terminating pool.."
-        pool.terminate()
-        pool.join()
-
-    print "Collected word sets with sizes: ", map(len, word_sets)
-    print "Computing intersection..."
-    word_set = reduce(lambda x, y: x & y, word_sets)
-    print "Result size: ", len(word_set)
-
-    print "Subtracting stopwords..."
-    nltk.download('stopwords')
-    langs = ['english', 'dutch', 'french', 'italian', 'portuguese', 'swedish', 'german', 'spanish']
-    all_stopwords = reduce(lambda x, y: x | y, [set(nltk.corpus.stopwords.words(lng)) for lng in langs])
-    all_stopwords = set(map(unidecode, all_stopwords))
-    word_set = word_set - all_stopwords
-    print "Resulting word set size: ", len(word_set)
+    #print "Subtracting stopwords..."
+    #nltk.download('stopwords')
+    #langs = ['english', 'spanish']
+    #all_stopwords = reduce(lambda x, y: x | y, [set(nltk.corpus.stopwords.words(lng)) for lng in langs])
+    #all_stopwords = set(map(unidecode, all_stopwords))
+    #all_words = all_words - all_stopwords
+    #print "Resulting word set size: ", len(all_words)
 
     print "Saving..."
     zodb_root = open_zodb()
-    zodb_root.all_words = word_set
+    zodb_root.all_words = all_words
     transaction.commit()
     print "Done"

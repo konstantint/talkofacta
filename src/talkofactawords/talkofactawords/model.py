@@ -46,11 +46,11 @@ class SignificantWordTableMixin(object):
 
 # The classes below define actual tables. They differ only in the table names
 # The table name is determined automatically from class name by a method in DynamicTableNameBase
-class ByCountry(Base, SignificantWordTableMixin):
+class ByHansard(Base, SignificantWordTableMixin):
     pass
 
 class ByMonth(Base, SignificantWordTableMixin):
     pass
 
-class ByYear(Base, SignificantWordTableMixin):
+class BySpeaker(Base, SignificantWordTableMixin):
     pass

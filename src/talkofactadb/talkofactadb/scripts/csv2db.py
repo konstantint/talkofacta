@@ -12,11 +12,11 @@ License: MIT
 """
 
 import csv, gzip, os
+from datetime import datetime
 from docopt import docopt
 from clint.textui import progress
 from talkofactadb.model import *
 from talkofactadb.config import get_config
-
 
 def main():
     args = docopt(__doc__)
@@ -26,16 +26,14 @@ def main():
     Base.metadata.create_all(e)
     Session = sessionmaker(e)
     s = Session()
-    with gzip.open(os.path.join(c.textdb_dir, 'English.csv.gz'), 'rb') as csv_file:
+    with gzip.open(os.path.join(c.textdb_dir, 'acta.csv.gz'), 'rb') as csv_file:
         reader = csv.reader(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
         reader.next()   # Skip header
-        for row in progress.mill(reader, label='Writing to DB ', expected_size=254253, every=1000):
-            sp = Speech(date=datetime.strptime(row[0], '%Y-%m-%d'),
+        for row in progress.mill(reader, label='Writing to DB ', expected_size=10000, every=1000):
+            sp = Speech(date=datetime.strptime(row[3], '%Y-%m-%d'),
                         speaker_uri=unicode(row[1], 'utf-8'),
-                        first_name=unicode(row[2], 'utf-8'),
-                        last_name=unicode(row[3], 'utf-8'),
-                        country=row[4],
-                        speech=unicode(row[5], 'utf-8'))
+                        hansard=unicode(row[0], 'utf-8'),
+                        speech=unicode(row[2], 'utf-8'))
             s.add(sp)
     print "Committing..."
     s.commit()

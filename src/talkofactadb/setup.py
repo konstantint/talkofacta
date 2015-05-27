@@ -19,8 +19,6 @@ setup(
     entry_points={
         'console_scripts': [
           'test_config = talkofactadb.config:test_config',
-          'get_ttl = talkofactadb.scripts.get_ttl:main',
-          'ttl2csv = talkofactadb.scripts.ttl2csv:main',
           'csv2db = talkofactadb.scripts.csv2db:main',
          ]
     }

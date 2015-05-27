@@ -13,7 +13,7 @@ def open_zodb(config=None, read_only=False):
     "Opens a Zope database and returns a root object. If config not specified get_config() is used."
 
     if config is None:
-        from talkofeuropedb.config import get_config
+        from talkofactadb.config import get_config
         config = get_config()
     storage = ZODB.FileStorage.FileStorage(os.path.join(config.zodb_dir, 'zodb.fs'), read_only=read_only)
     db = ZODB.DB(storage)

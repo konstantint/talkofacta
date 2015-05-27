@@ -12,12 +12,9 @@ database specified by <resultsdb_url>.
        <feature_name>  - is the name of the precomputed feature vector
                          (as given to compute_features, i.e. "words" or "noun_phrases").
        <experimentset_name> - is the name of the "experiment set", currently supported are:
-                     by_country
+                     by_hansard
                      by_month
-                     by_year
-                     by_year_for_country
-                     by_country_for_year
-
+                     by_speaker
 
 Copyright 2015, Konstantin Tretyakov, Ilya Kuzovkin, Alexander Tkachenko.
 License: MIT
@@ -29,11 +26,11 @@ from sqlalchemy import distinct, func
 from collections import Counter
 import BTrees
 import transaction
-from talkofeuropedb.config import get_config
-from talkofeuropewords.zodb import open_zodb
-from talkofeuropedb.model import open_db
-from talkofeuropedb.model import Speech
-from talkofeuropewords.model import create_db, ByCountry, ByMonth, ByYear
+from talkofactadb.config import get_config
+from talkofactawords.zodb import open_zodb
+from talkofactadb.model import open_db
+from talkofactadb.model import Speech
+from talkofactawords.model import create_db, ByHansard, ByMonth, BySpeaker
 from clint.textui import progress
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -116,31 +113,31 @@ class ExperimentSet(object):
         return None
 
 
-class WordByCountry(ExperimentSet):
-    '''Finds the most discriminative words for each country vs all other countries.'''
+class WordByHansard(ExperimentSet):
+    '''Finds the most discriminative words for each hansard vs all other hansards.'''
 
     def __init__(self, pval_cutoff=0.01, feature_name='words'):
-        super(WordByCountry, self).__init__(pval_cutoff, feature_name)
+        super(WordByHansard, self).__init__(pval_cutoff, feature_name)
 
         print "Loading db..."
         session = open_db()
-        self.all_countries = [r[0] for r in session.query(distinct(Speech.country))]
+        self.all_hansards = [r[0] for r in session.query(distinct(Speech.hansard))]
 
     def list_foreground_groups(self):
-        return self.all_countries
+        return self.all_hansards
 
     def list_background_groups(self):
         return ['*']
 
     def list_experiments(self):
-        return [(c, '*') for c in self.all_countries]
+        return [(c, '*') for c in self.all_hansards]
 
     def compute_foreground_group_sum(self, group_name):
         session = open_db(self.config.db_url)
         zodb = open_zodb(self.config, read_only=True)
         result = Counter()
         wordset = zodb.all_words
-        for (id,) in session.query(Speech.id).filter(Speech.country == group_name).filter(Speech.lang == 'en'):
+        for (id,) in session.query(Speech.id).filter(Speech.hansard == group_name):
             v = zodb.features[self.feature_name][id]
             for w in v:
                 if w in wordset:
@@ -152,7 +149,46 @@ class WordByCountry(ExperimentSet):
         return reduce(lambda x, y: x+y, cache.values())
 
     def result_table_class(self):
-        return ByCountry
+        return ByHansard
+
+
+class WordBySpeaker(ExperimentSet):
+    '''Finds the most discriminative words for each hansard vs all other hansards.'''
+
+    def __init__(self, pval_cutoff=0.01, feature_name='words'):
+        super(WordBySpeaker, self).__init__(pval_cutoff, feature_name)
+
+        print "Loading db..."
+        session = open_db()
+        self.all_speakers = [r[0] for r in session.query(distinct(Speech.speaker_uri))]
+
+    def list_foreground_groups(self):
+        return self.all_speakers
+
+    def list_background_groups(self):
+        return ['*']
+
+    def list_experiments(self):
+        return [(c, '*') for c in self.all_speakers]
+
+    def compute_foreground_group_sum(self, group_name):
+        session = open_db(self.config.db_url)
+        zodb = open_zodb(self.config, read_only=True)
+        result = Counter()
+        wordset = zodb.all_words
+        for (id,) in session.query(Speech.id).filter(Speech.speaker_uri == group_name):
+            v = zodb.features[self.feature_name][id]
+            for w in v:
+                if w in wordset:
+                    result[w] += v[w]
+        return result
+
+    def compute_background_group_sum(self, group_name, cache):
+        assert group_name == '*'
+        return reduce(lambda x, y: x+y, cache.values())
+
+    def result_table_class(self):
+        return BySpeaker
 
 
 class WordByMonth(ExperimentSet):
@@ -163,8 +199,8 @@ class WordByMonth(ExperimentSet):
 
         print "Loading db..."
         s = open_db()
-        min_date = s.query(func.min(Speech.date)).filter(Speech.lang == 'en').first()[0]
-        max_date = s.query(func.max(Speech.date)).filter(Speech.lang == 'en').first()[0]
+        min_date = s.query(func.min(Speech.date)).first()[0]
+        max_date = s.query(func.max(Speech.date)).first()[0]
         min_month = datetime.date(min_date.year, min_date.month, 1)
         max_month = datetime.date(max_date.year, max_date.month, 1)
         all_months = []
@@ -191,7 +227,7 @@ class WordByMonth(ExperimentSet):
         y, m = map(int, group_name.split('-'))
         dmin = datetime.date(y,m,1)
         dmax = dmin + relativedelta(months=1)
-        for (id,) in session.query(Speech.id).filter(Speech.date >= dmin).filter(Speech.date < dmax).filter(Speech.lang == 'en'):
+        for (id,) in session.query(Speech.id).filter(Speech.date >= dmin).filter(Speech.date < dmax):
             v = zodb.features[self.feature_name][id]
             for w in v:
                 if w in wordset:
@@ -205,49 +241,6 @@ class WordByMonth(ExperimentSet):
     def result_table_class(self):
         return ByMonth
 
-
-class WordByYear(ExperimentSet):
-    '''Finds the most discriminative words for each year.'''
-
-    def __init__(self, pval_cutoff=0.01, feature_name='words'):
-        super(WordByYear, self).__init__(pval_cutoff, feature_name)
-
-        print "Loading db..."
-        s = open_db()
-        min_date = s.query(func.min(Speech.date)).filter(Speech.lang == 'en').first()[0]
-        max_date = s.query(func.max(Speech.date)).filter(Speech.lang == 'en').first()[0]
-        self.all_years = map(str, range(min_date.year, max_date.year+1))
-
-    def list_foreground_groups(self):
-        return self.all_years
-
-    def list_background_groups(self):
-        return ['*']
-
-    def list_experiments(self):
-        return [(c, '*') for c in self.all_years]
-
-    def compute_foreground_group_sum(self, group_name):
-        session = open_db(self.config.db_url)
-        zodb = open_zodb(self.config, read_only=True)
-        result = Counter()
-        wordset = zodb.all_words
-        y = int(group_name)
-        dmin = datetime.date(y,1,1)
-        dmax = datetime.date(y+1,1,1)
-        for (id,) in session.query(Speech.id).filter(Speech.date >= dmin).filter(Speech.date < dmax).filter(Speech.lang == 'en'):
-            v = zodb.features[self.feature_name][id]
-            for w in v:
-                if w in wordset:
-                    result[w] += v[w]
-        return result
-
-    def compute_background_group_sum(self, group_name, cache):
-        assert group_name == '*'
-        return reduce(lambda x, y: x+y, cache.values())
-
-    def result_table_class(self):
-        return ByYear
 
 class ComputeForegroundGroupSumCallable(object):
     """We need to wrap our experiment_set into this object for passing into worker nodes for two reasons:
@@ -273,9 +266,9 @@ class ComputeOverrepresentedWordsCallable(object):
         return (fg, bg, results)
 
 
-EXPERIMENT_SETS = {'by_country': WordByCountry,
+EXPERIMENT_SETS = {'by_hansard': WordByHansard,
                    'by_month': WordByMonth,
-                   'by_year': WordByYear }
+                   'by_speaker': WordBySpeaker }
 
 
 def main():

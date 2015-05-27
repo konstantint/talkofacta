@@ -4,9 +4,6 @@ import os
 
 root_dir = os.path.abspath(os.path.dirname(os.getenv('CONFIG')))
 
-# Directory for downloading TURTLE files
-ttl_dir = root_dir + '/data/ttl'
-
 # Directory for storing CSV & SQLITE files with text data
 textdb_dir = root_dir + '/data/textdb'
 
@@ -14,13 +11,13 @@ textdb_dir = root_dir + '/data/textdb'
 zodb_dir = root_dir + '/data/zodb'
 
 # Database URL for importing Speech data
-db_url = "sqlite:///%s/english.sqlite" % textdb_dir
+db_url = "sqlite:///%s/acta.sqlite" % textdb_dir
 
 # Database URL for storing overrepresentation analysis results (extract_significant_features script)
 resultsdb_url = "sqlite:///%s/data/resultsdb.sqlite" % root_dir
 
 # Number of cores to use for parallel tasks
-num_cores = 130
+num_cores = 2
 
 
 # Config parameters used in Flask config

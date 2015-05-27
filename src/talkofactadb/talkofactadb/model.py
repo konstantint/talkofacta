@@ -37,17 +37,14 @@ class Speech(Base):
     id = Column(Integer, primary_key=True)
     date = Column(Date, nullable=False, index=True)
     speaker_uri = Column(Unicode(200), nullable=False, index=True)
-    first_name = Column(Unicode(100), nullable=False)
-    last_name = Column(Unicode(100), nullable=False)
-    country = Column(String(3), nullable=False, index=True)
+    hansard = Column(String(3), nullable=False, index=True)
     speech = Column(Unicode, nullable=False)
-    lang = Column(String(2))
 
 
 def open_db(db_url = None):
     "Returns an initialized Session object. If db_url is not specified, uses get_config().db_url"
     if db_url is None:
-        from talkofeuropedb.config import get_config
+        from talkofactadb.config import get_config
         db_url = get_config().db_url
     e = create_engine(db_url)
     Session = sessionmaker(e)
