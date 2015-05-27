@@ -17,7 +17,7 @@ db_url = "sqlite:///%s/acta.sqlite" % textdb_dir
 resultsdb_url = "sqlite:///%s/data/resultsdb.sqlite" % root_dir
 
 # Number of cores to use for parallel tasks
-num_cores = 2
+num_cores = 20
 
 
 # Config parameters used in Flask config
