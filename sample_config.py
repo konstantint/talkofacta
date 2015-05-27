@@ -22,5 +22,5 @@ num_cores = 20
 
 # Config parameters used in Flask config
 SQLALCHEMY_DATABASE_URI = 'sqlite:///%s' % os.path.join(root_dir, 'src/talkofactaweb/data/resultsdb.sqlite')
-DEBUG = True
-SQLALCHEMY_ECHO = True
+DEBUG = False
+SQLALCHEMY_ECHO = False
